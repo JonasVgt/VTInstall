@@ -1,349 +1,232 @@
-mod command;
+use script::Script;
+
+mod instruction;
+pub mod script;
+mod statement;
 
 #[macro_use]
 extern crate lalrpop_util;
 
-lalrpop_mod!(pub calculator1); // synthesized by LALRPOP
+lalrpop_mod!(pub parser); // synthesized by LALRPOP
+
+pub fn parse<'a>(
+    input: &'a str,
+    name: &'a str,
+) -> Result<Script, lalrpop_util::ParseError<usize, lalrpop_util::lexer::Token<'a>, &'a str>> {
+    parser::ScriptParser::new().parse(name, input)
+}
 
 #[cfg(test)]
 mod tests {
 
-
-    use crate::command::Command;
+    use crate::{instruction::Instruction, script::Script, statement::Statement};
 
     use super::*;
 
+    fn test_script(num_statements: usize, num_args: usize) -> Script {
+        let mut statements = Vec::new();
+        for _ in 0..num_statements {
+            let mut args: Vec<String> = Vec::new();
+            for i in 1..=num_args {
+                let mut arg = String::from("arg");
+                arg.push_str(i.to_string().as_str());
+                args.push(arg);
+            }
+
+            statements.push(Statement::new(Instruction::get_run_instruction(), args));
+        }
+
+        Script::new(statements, String::from("name"))
+    }
+
     #[test]
     fn only_instruction() {
-        let res = vec![Command {
-            instruction: String::from("INST"),
-            args: Vec::new(),
-        }];
         assert_eq!(
-            res,
-            calculator1::CommandsParser::new().parse("INST").unwrap()
+            test_script(1, 0),
+            parser::ScriptParser::new().parse("name", "RUN").unwrap()
         );
     }
 
     #[test]
     fn one_line() {
-        let res = vec![
-            Command {
-                instruction: String::from("INST"),
-                args: vec![
-                    String::from("arg1"),
-                    String::from("arg2"),
-                    String::from("arg3"),
-                ],
-            },
-        ];
-
         assert_eq!(
-            res,
-            calculator1::CommandsParser::new()
-                .parse("INST arg1 arg2 arg3")
+            test_script(1, 3),
+            parser::ScriptParser::new()
+                .parse("name", "RUN arg1 arg2 arg3")
                 .unwrap()
         );
     }
 
     #[test]
     fn multi_line() {
-        let res = vec![
-            Command {
-                instruction: String::from("INST"),
-                args: vec![
-                    String::from("arg1"),
-                    String::from("arg2"),
-                    String::from("arg3"),
-                ],
-            },
-            Command {
-                instruction: String::from("INST"),
-                args: vec![
-                    String::from("arg1"),
-                    String::from("arg2"),
-                    String::from("arg3"),
-                ],
-            },
-            Command {
-                instruction: String::from("INST"),
-                args: vec![
-                    String::from("arg1"),
-                    String::from("arg2"),
-                    String::from("arg3"),
-                ],
-            },
-        ];
-
         assert_eq!(
-            res,
-            calculator1::CommandsParser::new()
-                .parse("INST arg1 arg2 arg3\nINST arg1 arg2 arg3\nINST arg1 arg2 arg3")
+            test_script(3, 3),
+            parser::ScriptParser::new()
+                .parse(
+                    "name",
+                    "RUN arg1 arg2 arg3\nRUN arg1 arg2 arg3\nRUN arg1 arg2 arg3"
+                )
                 .unwrap()
         );
         assert_eq!(
-            res,
-            calculator1::CommandsParser::new()
-                .parse("INST arg1 arg2 arg3\r\nINST arg1 arg2 arg3\r\nINST arg1 arg2 arg3")
+            test_script(3, 3),
+            parser::ScriptParser::new()
+                .parse(
+                    "name",
+                    "RUN arg1 arg2 arg3\r\nRUN arg1 arg2 arg3\r\nRUN arg1 arg2 arg3"
+                )
                 .unwrap()
         );
     }
 
-
     #[test]
     fn multi_whitespace() {
-        let res = vec![
-            Command {
-                instruction: String::from("INST"),
-                args: vec![
-                    String::from("arg1"),
-                    String::from("arg2"),
-                    String::from("arg3"),
-                ],
-            },
-        ];
-
         assert_eq!(
-            res,
-            calculator1::CommandsParser::new()
-                .parse("INST \t\targ1   arg2 arg3")
+            test_script(1, 3),
+            parser::ScriptParser::new()
+                .parse("name", "RUN \t\targ1   arg2 arg3")
                 .unwrap()
         );
     }
 
     #[test]
     fn ignore_whitespace_end() {
-        let res1 = vec![
-            Command {
-                instruction: String::from("INST"),
-                args: vec![
-                    String::from("arg1"),
-                    String::from("arg2"),
-                    String::from("arg3"),
-                ],
-            },
-        ];
-
-        let res2 = vec![
-            Command {
-                instruction: String::from("INST"),
-                args: Vec::new(),
-            },
-        ];
-
-
         assert_eq!(
-            res1,
-            calculator1::CommandsParser::new()
-                .parse("INST arg1 arg2 arg3 \t ")
+            test_script(1, 3),
+            parser::ScriptParser::new()
+                .parse("name", "RUN arg1 arg2 arg3 \t ")
                 .unwrap()
         );
 
         assert_eq!(
-            res2,
-            calculator1::CommandsParser::new()
-                .parse("INST \t ")
+            test_script(1, 0),
+            parser::ScriptParser::new()
+                .parse("name", "RUN \t ")
                 .unwrap()
         );
     }
 
-
     #[test]
     fn ignore_whitespace_end_multiline() {
-        let res1 = vec![
-            Command {
-                instruction: String::from("INST"),
-                args: vec![
-                    String::from("arg1"),
-                    String::from("arg2"),
-                    String::from("arg3"),
-                ],
-            },
-            Command {
-                instruction: String::from("INST"),
-                args: vec![
-                    String::from("arg1"),
-                    String::from("arg2"),
-                    String::from("arg3"),
-                ],
-            },
-        ];
-
-        let res2 = vec![
-            Command {
-                instruction: String::from("INST"),
-                args: Vec::new(),
-            },
-            Command {
-                instruction: String::from("INST"),
-                args: Vec::new(),
-            },
-        ];
-
-
         assert_eq!(
-            res1,
-            calculator1::CommandsParser::new()
-                .parse("INST arg1 arg2 arg3 \t \nINST arg1 arg2 arg3 \t ")
+            test_script(2, 3),
+            parser::ScriptParser::new()
+                .parse("name", "RUN arg1 arg2 arg3 \t \nRUN arg1 arg2 arg3 \t ")
                 .unwrap()
         );
 
         assert_eq!(
-            res2,
-            calculator1::CommandsParser::new()
-                .parse("INST \t \nINST \t ")
+            test_script(2, 0),
+            parser::ScriptParser::new()
+                .parse("name", "RUN \t \nRUN \t ")
                 .unwrap()
         );
 
         assert_eq!(
-            res1,
-            calculator1::CommandsParser::new()
-                .parse("INST arg1 arg2 arg3 \t \r\nINST arg1 arg2 arg3 \t ")
+            test_script(2, 3),
+            parser::ScriptParser::new()
+                .parse("name", "RUN arg1 arg2 arg3 \t \r\nRUN arg1 arg2 arg3 \t ")
                 .unwrap()
         );
 
         assert_eq!(
-            res2,
-            calculator1::CommandsParser::new()
-                .parse("INST \t \r\nINST \t ")
+            test_script(2, 0),
+            parser::ScriptParser::new()
+                .parse("name", "RUN \t \r\nRUN \t ")
                 .unwrap()
         );
     }
 
     #[test]
     fn ignore_whitespace_start() {
-        let res1 = vec![
-            Command {
-                instruction: String::from("INST"),
-                args: vec![
-                    String::from("arg1"),
-                    String::from("arg2"),
-                    String::from("arg3"),
-                ],
-            },
-        ];
-
-        let res2 = vec![
-            Command {
-                instruction: String::from("INST"),
-                args: Vec::new(),
-            },
-        ];
-
-
         assert_eq!(
-            res1,
-            calculator1::CommandsParser::new()
-                .parse(" \t INST arg1 arg2 arg3")
+            test_script(1, 3),
+            parser::ScriptParser::new()
+                .parse("name", " \t RUN arg1 arg2 arg3")
                 .unwrap()
         );
 
         assert_eq!(
-            res2,
-            calculator1::CommandsParser::new()
-                .parse("\t INST")
-                .unwrap()
+            test_script(1, 0),
+            parser::ScriptParser::new().parse("name", "\t RUN").unwrap()
         );
     }
-
 
     #[test]
     fn comment_whole_line() {
-
-
-        let res = vec![
-            Command {
-                instruction: String::from("INST"),
-                args: vec![
-                    String::from("arg1"),
-                    String::from("arg2"),
-                    String::from("arg3"),
-                ],
-            },
-            Command {
-                instruction: String::from("INST"),
-                args: vec![
-                    String::from("arg1"),
-                    String::from("arg2"),
-                    String::from("arg3"),
-                ],
-            },
-        ];
-
         assert_eq!(
-            res,
-            calculator1::CommandsParser::new()
-                .parse("INST arg1 arg2 arg3\n# test comment \nINST arg1 arg2 arg3")
+            test_script(2, 3),
+            parser::ScriptParser::new()
+                .parse(
+                    "name",
+                    "RUN arg1 arg2 arg3\n# test comment \nRUN arg1 arg2 arg3"
+                )
                 .unwrap()
         );
     }
 
-
     #[test]
     fn comment_partial_line() {
-
-
-        let res = vec![
-            Command {
-                instruction: String::from("INST"),
-                args: vec![
-                    String::from("arg1"),
-                ],
-            },
-        ];
-
         assert_eq!(
-            res,
-            calculator1::CommandsParser::new()
-                .parse("INST arg1 #arg2 arg3")
+            test_script(2, 3),
+            parser::ScriptParser::new()
+                .parse(
+                    "name",
+                    "RUN arg1 arg2 arg3 #comment\nRUN arg1 arg2 arg3 #comment"
+                )
                 .unwrap()
         );
     }
 
     #[test]
     fn quoted_argument() {
-
-
-        let res = vec![
-            Command {
-                instruction: String::from("INST"),
-                args: vec![
-                    String::from("arg1.1 arg1.2"),
-                    String::from("arg2.1\targ2.2"),
-                    String::from(" arg3 "),
-                ],
-            },
-        ];
-
         assert_eq!(
-            res,
-            calculator1::CommandsParser::new()
-                .parse("INST 'arg1.1 arg1.2' 'arg2.1\targ2.2' ' arg3 '")
+            Script::new(
+                vec![Statement::new(
+                    Instruction::get_run_instruction(),
+                    vec![
+                        String::from("arg1.1 arg1.2"),
+                        String::from("arg2.1\targ2.2"),
+                        String::from(" arg3 "),
+                    ]
+                )],
+                String::from("name")
+            ),
+            parser::ScriptParser::new()
+                .parse("name", "RUN 'arg1.1 arg1.2' 'arg2.1\targ2.2' ' arg3 '")
                 .unwrap()
         );
     }
-
 
     #[test]
     fn comment_quoted_argument() {
-
-
-        let res = vec![
-            Command {
-                instruction: String::from("INST"),
-                args: vec![
-                    String::from("#no comment"),
-                ],
-            },
-        ];
-
         assert_eq!(
-            res,
-            calculator1::CommandsParser::new()
-                .parse("INST '#no comment' #'comment' ")
+            Script::new(
+                vec![Statement::new(
+                    Instruction::get_run_instruction(),
+                    vec![String::from("#no comment")]
+                )],
+                String::from("name")
+            ),
+            parser::ScriptParser::new()
+                .parse("name", "RUN '#no comment' #'comment' ")
                 .unwrap()
         );
     }
 
-
+    #[test]
+    fn comment_in_argument() {
+        assert_eq!(
+            Script::new(
+                vec![Statement::new(
+                    Instruction::get_run_instruction(),
+                    vec![String::from("no#comment")]
+                )],
+                String::from("name")
+            ),
+            parser::ScriptParser::new()
+                .parse("name", "RUN no#comment #comment ")
+                .unwrap()
+        );
+    }
 }

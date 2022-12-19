@@ -1,0 +1,41 @@
+use std::str::FromStr;
+use crate::statement::Statement as StatementType; 
+use crate::script::Script as ScriptType;
+use crate::instruction::Instruction as InstructionType;
+
+
+grammar(name: &str);
+
+
+pub Script: ScriptType = {
+    <mut statements:(<Statement> Newline)*> <e:Statement?> => match e { 
+        None => ScriptType::new(statements, String::from(name)),
+        Some(e) => {
+            statements.push(e);
+            ScriptType::new(statements, String::from(name))
+        }
+    }
+}
+
+Statement : StatementType = Whitespace? <instruction:Instruction> <args:(Whitespace <Argument>)*> Whitespace? => StatementType::new(<>);
+
+
+Instruction: InstructionType = Word => InstructionType::get_run_instruction();
+
+Argument : String = {
+    Word => String::from(<>),
+    <w:SingleQuotedWord> => String::from(&w[1..w.len()-1])
+}
+
+
+match{
+    r"[\n\r]([\t ]*(#[^\n\r]*)?[\n\r])*" => Newline,
+}else{
+    r#"'[^\n\r']*'"# => SingleQuotedWord,
+}else{
+    r#"[^#\n\r\t ][^\n\r\t ]*"# => Word,
+}else{
+    r"#[^\n\r]*" => { }, //skip comments
+    r"[\t ]+" => Whitespace,
+    _
+}
