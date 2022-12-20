@@ -31,17 +31,13 @@ fn main() {
    let args = Args::parse();
 
 
-   let input_path = Path::new(args.path.as_str());
-   let input = fs::read_to_string(input_path).unwrap();
-
-
-   let script = parser::parse(input.as_str(), input_path.file_stem().map_or("script",|x| x.to_str().unwrap_or("script") )).unwrap();
+   
    if args.compile {
-      if let Err(error) = compiler::compile(script, Path::new(args.target.as_str()), args.dry_run){
+      if let Err(error) = compiler::compile(Path::new(args.path.as_str()), Path::new(args.target.as_str()), args.dry_run){
          eprintln!("Compilation failed: {}", error);
          return;
       }
    }else{
-      interpreter::interpret(script, args.dry_run);
+      //interpreter::interpret(script, args.dry_run);
    }
 }

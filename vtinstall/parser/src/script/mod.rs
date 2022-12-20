@@ -1,4 +1,9 @@
+pub mod builder;
+pub mod instruction;
+
 use crate::statement::Statement;
+
+use self::builder::ScriptBuilder;
 
 #[derive(Debug, PartialEq)]
 pub struct Script {
@@ -7,9 +12,9 @@ pub struct Script {
 }
 
 impl Script {
-    /// Creates a new [`Script`].
-    pub fn new(statements: Vec<Statement>, name :String) -> Self {
-        Self { statements, name}
+
+    pub fn builder() -> ScriptBuilder{
+        ScriptBuilder::new()
     }
 
     /// Returns a reference to the statements of this [`Script`].

@@ -1,7 +1,7 @@
 use std::str::FromStr;
 use crate::statement::Statement as StatementType; 
 use crate::script::Script as ScriptType;
-use crate::instruction::Instruction as InstructionType;
+use crate::script::instruction::Instruction as InstructionType;
 
 
 grammar(name: &str);
@@ -9,10 +9,10 @@ grammar(name: &str);
 
 pub Script: ScriptType = {
     <mut statements:(<Statement> Newline)*> <e:Statement?> => match e { 
-        None => ScriptType::new(statements, String::from(name)),
+        None => ScriptType::builder().name(String::from(name)).statements(statements).build(),
         Some(e) => {
             statements.push(e);
-            ScriptType::new(statements, String::from(name))
+            ScriptType::builder().name(String::from(name)).statements(statements).build()
         }
     }
 }

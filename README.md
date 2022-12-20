@@ -11,10 +11,10 @@ resumes a previously started install.
 ### `--restart` (not yet implemented)
 restarts the install at the beginning (not recommended). (Overrides `--resume`)
 
-### `--dry-run` (not yet implemented)
+### `--dry-run`
 performs a dry run of the install. Nothing will be installed or changed.
 
-### `--compile` (not yet implemented)
+### `--compile`
 compiles the install script to a shell script. (Overrides `--resume` and `--restart`)
 
 ### `--import-path <path> [<path> ... ]` (not yet implemented)
@@ -42,7 +42,7 @@ Multiple definitions of commands with the same name in the same folder are not a
 Creates an argument. All arguments without a default value need to be passed when running the script. The argument is only valid after the instruction. It can be used with `$<arg-name>`.
 
 
-### `RUN <cmd> <args>` (not yet implemented)
+### `RUN <cmd> <args>`
 
 Runs shell command with provided arguments.
 
@@ -60,12 +60,12 @@ Copies folder or file from the source path to target path. If necessary, parent 
 Commands are structured as a JSON file. They can be located in the global commands folder, the same folder as the install script that uses it, in a subfolder of that folder called `cmd` or in any path that is provided with `--import-path`.
 For the search order see the `IMPORT` instruction.
 
-### Example Command file:
+### Example Instruction file:
 ```json
 {
     "name": "test",
-    "execute": ["test_command.sh arg1 arg2 $@"],
-    "dry-run": "test_command_dry.sh"
+    "execute": ["test.sh arg1 arg2 $@"],
+    "dry-run": "test_dry.sh"
 }
 ```
 There are the following tags:

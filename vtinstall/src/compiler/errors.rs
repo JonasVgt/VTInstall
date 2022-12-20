@@ -6,7 +6,8 @@ use std::fmt::{Display, Debug, write};
 pub enum ErrorKind{
     TargetExistsError,
     IOError,
-    ScriptDuplicateNameError
+    ScriptDuplicateNameError,
+    InstructionNotFoundError
 }
 
 
@@ -15,7 +16,8 @@ impl Display for ErrorKind {
         match self {
             ErrorKind::IOError => write!(f, "IO ERROR"),
             ErrorKind::ScriptDuplicateNameError => write!(f, "SCRIPT DUPLICATE NAME ERROR"),
-            ErrorKind::TargetExistsError => write!(f, "TARGET EXISTS ERROR")
+            ErrorKind::TargetExistsError => write!(f, "TARGET EXISTS ERROR"),
+            ErrorKind::InstructionNotFoundError => write!(f, "INSTRUCTION NOT FOUND ERROR")
         }
     }
 }
@@ -50,6 +52,13 @@ impl CompileError {
     pub fn target_exists_error(message: String) -> CompileError{
         CompileError{
             kind: ErrorKind::TargetExistsError,
+            message
+        }
+    }
+
+    pub fn instruction_not_found_error(message: String) -> CompileError{
+        CompileError{
+            kind: ErrorKind::InstructionNotFoundError,
             message
         }
     }

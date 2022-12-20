@@ -6,7 +6,12 @@ use parser::script::Script;
 
 use self::errors::CompileError;
 
-pub fn compile(script: Script, target: &Path, dry_run: bool) -> Result<(), CompileError> {
+pub fn compile(source: &Path, target: &Path, dry_run: bool) -> Result<(), CompileError> {
+   let input = fs::read_to_string(source).unwrap();
+
+   let script = parser::parse(input.as_str(), source.file_stem().map_or("script",|x| x.to_str().unwrap_or("script") )).unwrap();
+
+
     if target.exists() {
         return Err(CompileError::target_exists_error(format!("Target path already exists ({})!", target.to_str().unwrap_or(""))));
     }
@@ -15,15 +20,16 @@ pub fn compile(script: Script, target: &Path, dry_run: bool) -> Result<(), Compi
         return Err(CompileError::io_error(error.to_string()));
     }
 
-    if let Err(error) = compile_script(script, &target, dry_run){
+    if let Err(error) = compile_script(script, &source.parent().unwrap_or(Path::new("./")), &target, dry_run){
         return Err(error);
     }
 
     Ok(())
 }
 
-fn compile_script(script: Script, root: &Path, dry_run: bool) -> Result<(), CompileError> {
-    let target_path = root.join(script.name().to_owned() + ".sh");
+
+fn compile_script(script: Script,source_root: &Path, target_root: &Path, dry_run: bool) -> Result<(), CompileError> {
+    let target_path = target_root.join(script.name().to_owned() + ".sh");
 
     if target_path.exists() {
         return Err(CompileError::script_duplicate_name_error(format!("File at: {} already exists!", target_path.to_str().unwrap_or(""))));
@@ -34,20 +40,39 @@ fn compile_script(script: Script, root: &Path, dry_run: bool) -> Result<(), Comp
         Err(error) => return Err(CompileError::io_error(error.to_string()))
     };
 
-    if let Err(error) = file.write( "#!/bin/bash\n".as_bytes()){
+    if let Err(error) = file.write( "#!/bin/bash\nBASEDIR=$(dirname $0)\n".as_bytes()){
         return Err(CompileError::io_error(error.to_string()));
     }
 
 
 
     for statement in script.statements() {
-        if let Err(error) = file.write( statement.to_bash(dry_run).as_bytes()){
+
+        let executable = statement.get_executable(dry_run);
+
+        let target_instruction = target_root.join("cmd").join(&executable);
+        let source_instruction = source_root.join("cmd").join(&executable);
+        if !&target_instruction.exists(){
+            if !&source_instruction.exists(){
+                return Err(CompileError::instruction_not_found_error(format!("Instruction at: {} not found!", source_instruction.to_str().unwrap_or(""))));
+            }
+
+            if !&target_root.join("cmd").exists(){
+                if let Err(error) = fs::create_dir(&target_root.join("cmd")) {
+                    return Err(CompileError::io_error(error.to_string()));
+                }
+            }
+
+            if let Err(error) = fs::copy(&source_instruction, &target_instruction){
+                return Err(CompileError::io_error(format!("from: {} to: {}: {}",&source_instruction.to_str().unwrap_or(""), &target_instruction.to_str().unwrap_or(""),error.to_string())));
+            }
+        }
+
+
+        if let Err(error) = file.write( format!("{} {}\n",Path::new("$BASEDIR").join("cmd").join(&executable).to_str().unwrap(), statement.args().join(" ")).as_bytes()){
             return Err(CompileError::io_error(error.to_string()));
         }
 
-        if let Err(error) = file.write( "\n".as_bytes()){
-            return Err(CompileError::io_error(error.to_string()));
-        }
     }
     Ok(())
 }

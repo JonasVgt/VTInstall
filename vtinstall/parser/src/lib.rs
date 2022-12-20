@@ -1,6 +1,5 @@
 use script::Script;
 
-mod instruction;
 pub mod script;
 mod statement;
 
@@ -19,7 +18,7 @@ pub fn parse<'a>(
 #[cfg(test)]
 mod tests {
 
-    use crate::{instruction::Instruction, script::Script, statement::Statement};
+    use crate::{script::Instruction2, script::Script, statement::Statement};
 
     use super::*;
 
@@ -33,7 +32,7 @@ mod tests {
                 args.push(arg);
             }
 
-            statements.push(Statement::new(Instruction::get_run_instruction(), args));
+            statements.push(Statement::new(Instruction2::get_run_instruction(), args));
         }
 
         Script::new(statements, String::from("name"))
@@ -183,7 +182,7 @@ mod tests {
         assert_eq!(
             Script::new(
                 vec![Statement::new(
-                    Instruction::get_run_instruction(),
+                    Instruction2::get_run_instruction(),
                     vec![
                         String::from("arg1.1 arg1.2"),
                         String::from("arg2.1\targ2.2"),
@@ -203,7 +202,7 @@ mod tests {
         assert_eq!(
             Script::new(
                 vec![Statement::new(
-                    Instruction::get_run_instruction(),
+                    Instruction2::get_run_instruction(),
                     vec![String::from("#no comment")]
                 )],
                 String::from("name")
@@ -219,7 +218,7 @@ mod tests {
         assert_eq!(
             Script::new(
                 vec![Statement::new(
-                    Instruction::get_run_instruction(),
+                    Instruction2::get_run_instruction(),
                     vec![String::from("no#comment")]
                 )],
                 String::from("name")
