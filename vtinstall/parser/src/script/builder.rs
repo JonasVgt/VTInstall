@@ -1,6 +1,6 @@
-use crate::statement::Statement;
 
-use super::Script;
+
+use super::{Script, statement::Statement};
 
 pub struct ScriptBuilder {
     name: String,

@@ -1,9 +1,8 @@
 pub mod builder;
 pub mod instruction;
+pub mod statement;
 
-use crate::statement::Statement;
-
-use self::builder::ScriptBuilder;
+use self::{builder::ScriptBuilder, statement::Statement};
 
 #[derive(Debug, PartialEq)]
 pub struct Script {

@@ -5,7 +5,7 @@ use crate::script::instruction::Instruction;
 
 #[derive(Debug, PartialEq)]
 pub struct Statement {
-    instruction: Instruction,
+    instruction: Instruction, 
     args: Vec<String>,
 }
 

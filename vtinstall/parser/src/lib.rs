@@ -1,7 +1,6 @@
 use script::Script;
 
 pub mod script;
-mod statement;
 
 #[macro_use]
 extern crate lalrpop_util;
