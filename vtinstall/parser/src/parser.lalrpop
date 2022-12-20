@@ -1,7 +1,6 @@
 use std::str::FromStr;
 use crate::script::statement::Statement as StatementType; 
 use crate::script::Script as ScriptType;
-use crate::script::instruction::Instruction as InstructionType;
 
 
 grammar(name: &str);
@@ -17,24 +16,30 @@ pub Script: ScriptType = {
     }
 }
 
-Statement : StatementType = Whitespace? Word <args:(Whitespace <Argument>)*> Whitespace? => StatementType::INSTRUCTION(InstructionType::get_run_instruction(<>));
+Statement : StatementType = Whitespace? <instruction: Instruction> Whitespace <args: Args> => StatementType::parse(<>);
 
 
+Instruction = SpecialCharWord;
 
-Argument : String = {
-    Word => String::from(<>),
-    <w:SingleQuotedWord> => String::from(&w[1..w.len()-1])
+Args : String = {
+    SpecialCharWord => String::from(<>),
+    <a:Args> <b: Whitespace> <c:SpecialCharWord> => a + b + &c,
 }
 
 
+SpecialCharWord :String = {
+    <a:Instruction> <b: Word> => a + b,
+    <a:Instruction> <b: SpecialChar> => a + b,
+    Word => String::from(<>),
+    SpecialChar => String::from(<>),
+}
+
 match{
-    r"[\n\r]([\t ]*(#[^\n\r]*)?[\n\r])*" => Newline,
-}else{
-    r#"'[^\n\r']*'"# => SingleQuotedWord,
-}else{
-    r#"[^#\n\r\t ][^\n\r\t ]*"# => Word,
+    r"\r?\n" => Newline,
+    r"[\w\d]+" => Word,
+    r"[^\w\d\t \r\n]" => SpecialChar,
+    r"[\t ]+" => Whitespace,
 }else{
     r"#[^\n\r]*" => { }, //skip comments
-    r"[\t ]+" => Whitespace,
     _
 }

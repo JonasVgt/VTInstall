@@ -1,14 +1,14 @@
 use std::fmt::Debug;
 
-pub struct Instruction {
+pub struct Command {
     name: String,
     executable: String,
-    args: Vec<String>,
+    args: String,
 }
 
-impl Instruction {
-    pub fn get_run_instruction(args: Vec<String>) -> Instruction {
-        Instruction {
+impl Command {
+    pub fn get_run_instruction(args: String) -> Command {
+        Command {
             name: String::from("RUN"),
             executable: String::from("run.sh"),
             args
@@ -19,12 +19,12 @@ impl Instruction {
         self.executable.as_ref()
     }
 
-    pub fn args(&self) -> &[String] {
+    pub fn args(&self) -> &str {
         self.args.as_ref()
     }
 }
 
-impl Debug for Instruction {
+impl Debug for Command {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Instruction")
             .field("name", &self.name)
@@ -32,7 +32,7 @@ impl Debug for Instruction {
     }
 }
 
-impl PartialEq for Instruction {
+impl PartialEq for Command {
     fn eq(&self, other: &Self) -> bool {
         self.name == other.name
     }

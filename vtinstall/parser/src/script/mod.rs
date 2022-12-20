@@ -1,5 +1,5 @@
 pub mod builder;
-pub mod instruction;
+pub mod command;
 pub mod statement;
 
 use self::{builder::ScriptBuilder, statement::Statement};
