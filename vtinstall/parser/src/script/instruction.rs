@@ -3,24 +3,24 @@ use std::fmt::Debug;
 pub struct Instruction {
     name: String,
     executable: String,
-    dry_run_executable: String,
+    args: Vec<String>,
 }
 
 impl Instruction {
-    pub fn get_run_instruction() -> Instruction {
+    pub fn get_run_instruction(args: Vec<String>) -> Instruction {
         Instruction {
             name: String::from("RUN"),
             executable: String::from("run.sh"),
-            dry_run_executable: String::from("run_dr.sh"),
+            args
         }
     }
 
-    pub fn get_executable(&self, dry_run: bool) -> &str {
-        if dry_run {
-            &self.dry_run_executable
-        } else {
-            &self.executable
-        }
+    pub fn executable(&self) -> &str {
+        self.executable.as_ref()
+    }
+
+    pub fn args(&self) -> &[String] {
+        self.args.as_ref()
     }
 }
 

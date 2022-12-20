@@ -2,7 +2,7 @@ mod errors;
 
 use std::{fs::{self, File}, path::Path, io::Write};
 
-use parser::script::Script;
+use parser::script::{Script, instruction, statement::Statement};
 
 use self::errors::CompileError;
 
@@ -20,7 +20,7 @@ pub fn compile(source: &Path, target: &Path, dry_run: bool) -> Result<(), Compil
         return Err(CompileError::io_error(error.to_string()));
     }
 
-    if let Err(error) = compile_script(script, &source.parent().unwrap_or(Path::new("./")), &target, dry_run){
+    if let Err(error) = compile_script(script, &source.parent().unwrap_or(Path::new("./")), &target){
         return Err(error);
     }
 
@@ -28,7 +28,7 @@ pub fn compile(source: &Path, target: &Path, dry_run: bool) -> Result<(), Compil
 }
 
 
-fn compile_script(script: Script,source_root: &Path, target_root: &Path, dry_run: bool) -> Result<(), CompileError> {
+fn compile_script(script: Script,source_root: &Path, target_root: &Path) -> Result<(), CompileError> {
     let target_path = target_root.join(script.name().to_owned() + ".sh");
 
     if target_path.exists() {
@@ -47,8 +47,8 @@ fn compile_script(script: Script,source_root: &Path, target_root: &Path, dry_run
 
 
     for statement in script.statements() {
-
-        let executable = statement.get_executable(dry_run);
+        let Statement::INSTRUCTION(instruction) = statement;
+        let executable = instruction.executable();
 
         let target_instruction = target_root.join("cmd").join(&executable);
         let source_instruction = source_root.join("cmd").join(&executable);
@@ -69,7 +69,7 @@ fn compile_script(script: Script,source_root: &Path, target_root: &Path, dry_run
         }
 
 
-        if let Err(error) = file.write( format!("{} {}\n",Path::new("$BASEDIR").join("cmd").join(&executable).to_str().unwrap(), statement.args().join(" ")).as_bytes()){
+        if let Err(error) = file.write( format!("{} {}\n",Path::new("$BASEDIR").join("cmd").join(&executable).to_str().unwrap(), instruction.args().join(" ")).as_bytes()){
             return Err(CompileError::io_error(error.to_string()));
         }
 

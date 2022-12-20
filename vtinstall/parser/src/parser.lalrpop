@@ -17,10 +17,9 @@ pub Script: ScriptType = {
     }
 }
 
-Statement : StatementType = Whitespace? <instruction:Instruction> <args:(Whitespace <Argument>)*> Whitespace? => StatementType::new(<>);
+Statement : StatementType = Whitespace? Word <args:(Whitespace <Argument>)*> Whitespace? => StatementType::INSTRUCTION(InstructionType::get_run_instruction(<>));
 
 
-Instruction: InstructionType = Word => InstructionType::get_run_instruction();
 
 Argument : String = {
     Word => String::from(<>),
