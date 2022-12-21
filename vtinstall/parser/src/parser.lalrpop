@@ -16,7 +16,7 @@ pub Script: ScriptType = {
     }
 }
 
-Statement : StatementType = Whitespace? <instruction: Instruction> Whitespace <args: Args> => StatementType::parse(<>);
+Statement : StatementType = Whitespace? <instruction: Instruction> <args: (Whitespace <Args>)?> => StatementType::parse(instruction, args.unwrap_or(String::from("")));
 
 
 Instruction = SpecialCharWord;
