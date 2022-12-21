@@ -1,0 +1,5 @@
+{
+    "name": "RUN",
+    "execute": "run.sh",
+    "dry-run": "run_dr.sh"
+}
