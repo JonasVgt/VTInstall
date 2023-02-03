@@ -7,11 +7,11 @@ pub struct Command {
 }
 
 impl Command {
-    pub fn get_run_instruction(args: String) -> Command {
+    pub fn get_run_instruction(args: &str) -> Command {
         Command {
             name: String::from("RUN"),
             executable: String::from("run.sh"),
-            args
+            args: String::from(args)
         }
     }
 

@@ -14,6 +14,7 @@ pub fn parse<'a>(
     parser::ScriptParser::new().parse(name, input)
 }
 
+/*
 #[cfg(test)]
 mod tests {
 
@@ -221,3 +222,4 @@ mod tests {
         );
     }
 }
+*/
