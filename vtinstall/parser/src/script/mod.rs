@@ -1,6 +1,7 @@
 pub mod builder;
 pub mod command;
 pub mod statement;
+pub mod use_statement;
 
 use self::{builder::ScriptBuilder, statement::Statement};
 
