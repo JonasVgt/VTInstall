@@ -1,4 +1,5 @@
 mod errors;
+mod script_writer;
 
 use std::{
     fs::{self, File},
@@ -8,7 +9,7 @@ use std::{
 
 use parser::script::{command, statement::Statement, Script};
 
-use self::errors::CompileError;
+use self::{errors::CompileError, script_writer::ScriptWriter};
 
 pub fn compile(source: &Path, target: &Path, dry_run: bool) -> Result<(), CompileError> {
     let input = fs::read_to_string(source).unwrap();
@@ -47,21 +48,8 @@ fn compile_script(
 ) -> Result<(), CompileError> {
     let target_path = target_root.join(script.name().to_owned() + ".sh");
 
-    if target_path.exists() {
-        return Err(CompileError::script_duplicate_name_error(format!(
-            "File at: {} already exists!",
-            target_path.to_str().unwrap_or("")
-        )));
-    }
+    let mut writer = ScriptWriter::create(target_path.as_path())?;
 
-    let mut file = match File::create(target_path) {
-        Ok(f) => f,
-        Err(error) => return Err(CompileError::io_error(error.to_string())),
-    };
-
-    if let Err(error) = file.write("#!/bin/bash\nBASEDIR=$(dirname \"$0\")\n".as_bytes()) {
-        return Err(CompileError::io_error(error.to_string()));
-    }
 
     for statement in script.statements() {
         match statement {
@@ -95,17 +83,8 @@ fn compile_script(
                         )));
                     }
                 }
+                writer.command(executable, instruction.args())?;
 
-                if let Err(error) = file.write(
-                    format!(
-                        "\"$BASEDIR/cmd/{}\" {}\n",
-                        &executable,
-                        instruction.args()
-                    )
-                    .as_bytes(),
-                ) {
-                    return Err(CompileError::io_error(error.to_string()));
-                }
             }
         }
     }
